@@ -61,9 +61,9 @@ class MigrateParents extends Command
         $totalInsertedOrIgnored = 0;
 
         Student::query()
-            ->select(['id', 'phone'])
-            ->whereNotNull('phone')
-            ->where('phone', '!=', '')
+            ->select(['id', 'phone','father_name'])
+            // ->whereNotNull('phone')
+            // ->where('phone', '!=', '')
             ->orderBy('id')
             ->chunkById(200, function ($students) use (&$totalInsertedOrIgnored) {
 
@@ -72,13 +72,14 @@ class MigrateParents extends Command
                 foreach ($students as $student) {
                     $phone = $this->normalizePhone($student->phone);
 
-                    if ($phone === '') {
-                        continue;
-                    }
+                    // if ($phone === '') {
+                    //     continue;
+                    // }
 
                     $rows[] = [
-                        'phone'      => $phone,
-                        'password'   => Hash::make($phone), // or Hash::make('123456')
+                        'phone'      => $student->phone,
+                        'name'       => $student->father_name ?? 'Parent of Student ' . $student->id,
+                        'password'   => Hash::make($student->phone), // or Hash::make('123456')
                         'created_at' => now(),
                         'updated_at' => now(),
                     ];
@@ -88,11 +89,6 @@ class MigrateParents extends Command
                     return;
                 }
 
-                /**
-                 * upsert: insert new rows, ignore duplicates by unique key (phone)
-                 * - uniqueBy: ['phone']
-                 * - update columns: [] (do nothing if exists)
-                 */
                 ParentModel::upsert($rows, ['phone'], []);
 
                 $totalInsertedOrIgnored += count($rows);
