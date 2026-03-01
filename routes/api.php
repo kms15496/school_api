@@ -23,4 +23,9 @@ Route::group(['middleware' => 'auth:sanctum'], function () {
         Route::post('/attendance', [\App\Http\Controllers\API\StudentController::class, 'getAttendance']);
         Route::post('/exam-timetable', [\App\Http\Controllers\API\ExamController::class, 'getExamTimetable']);
     });
+
+    Route::group(['prefix' => 'exam', 'middleware' => ['check.request']], function () {
+        Route::post('/', [\App\Http\Controllers\API\ExamController::class, 'getList']);
+        Route::get('/{exam}', [\App\Http\Controllers\API\ExamController::class, 'getDetail']);  
+    });
 });

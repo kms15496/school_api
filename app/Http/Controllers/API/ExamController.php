@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
+use App\Models\Exam;
 use App\Models\ExamSession;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -62,4 +63,43 @@ class ExamController extends Controller
 
         return $this->apiResponse(true, 'Exam timetable fetched successfully', $grouped);
     }
+
+    public function getList(Request $request)
+    {
+        $academicYearId = $request->input('aay');
+        $classId = $request->input('class_id');
+        if (!$academicYearId || !$classId) {
+            return $this->apiResponse(false, 'Invalid request context', null, 400);
+        }
+
+        $exams = Exam::query()
+            ->where('school_class_id', $classId)
+            ->where('academic_year_id', $academicYearId)
+            ->select(['id', 'name', 'school_class_id', 'academic_year_id'])
+
+            ->get();
+
+        if ($exams->isEmpty()) {
+            return $this->apiResponse(false, 'No exams found for the student\'s class and academic year', [], 404);
+        }
+
+        return $this->apiResponse(true, 'Exams fetched successfully', $exams);
+    }
+
+    public function getDetail(Request $request, Exam $exam)
+    {
+        $academicYearId = $request->input('aay');
+        $classId = $request->input('class_id');
+        if (!$academicYearId || !$classId) {
+            return $this->apiResponse(false, 'Invalid request context', null, 400);
+        }
+
+        if ($exam->school_class_id != $classId || $exam->academic_year_id != $academicYearId) {
+            return $this->apiResponse(false, 'Exam not found for the student\'s class and academic year', null, 404);
+        }
+
+        $exam->load(['sessions.subject']);
+
+        return $this->apiResponse(true, 'Exam details fetched successfully', $exam);
+    }   
 }
