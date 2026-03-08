@@ -22,10 +22,13 @@ Route::group(['middleware' => 'auth:sanctum'], function () {
         Route::get('/{student}', [\App\Http\Controllers\API\StudentController::class, 'show']);
         Route::post('/attendance', [\App\Http\Controllers\API\StudentController::class, 'getAttendance']);
         Route::post('/exam-timetable', [\App\Http\Controllers\API\ExamController::class, 'getExamTimetable']);
+        Route::post('/report-card', [\App\Http\Controllers\API\ExamController::class, 'getReportCard']);
     });
 
     Route::group(['prefix' => 'exam', 'middleware' => ['check.request']], function () {
         Route::post('/', [\App\Http\Controllers\API\ExamController::class, 'getList']);
-        Route::get('/{exam}', [\App\Http\Controllers\API\ExamController::class, 'getDetail']);  
+        Route::get('/{exam}', [\App\Http\Controllers\API\ExamController::class, 'getDetail']);
+
+        Route::get('/{exam}/sessions', [\App\Http\Controllers\API\ExamController::class, 'getSessions']);
     });
 });
