@@ -187,7 +187,7 @@ class ExamController extends Controller
             ->get();
 
         if ($rows->isEmpty()) {
-            return $this->apiResponse(false, 'Report card not found', [], 404);
+            return $this->apiResponse(false, 'Report card not found', [], 200);
         }
 
         $first = $rows->first();
