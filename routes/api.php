@@ -31,4 +31,9 @@ Route::group(['middleware' => 'auth:sanctum'], function () {
 
         Route::get('/{exam}/sessions', [\App\Http\Controllers\API\ExamController::class, 'getSessions']);
     });
+
+    Route::group(['prefix' => 'event', 'middleware' => ['check.request']], function () {
+        Route::get('/', [\App\Http\Controllers\API\EventController::class, 'getList']);
+        Route::get('/{event}', [\App\Http\Controllers\API\EventController::class, 'getDetail']);
+    });
 });
