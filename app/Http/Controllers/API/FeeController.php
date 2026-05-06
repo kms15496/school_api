@@ -14,7 +14,7 @@ class FeeController extends Controller
         $academicYearId = (int) $request->input('aay');
         $studentId = (int) $request->input('student_id');
 
-        dd($request->all());
+
 
         if (!$schoolId || !$academicYearId || !$studentId) {
             return response()->json([
