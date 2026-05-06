@@ -1,0 +1,60 @@
+# version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: school-api
+    working_dir: /var/www
+    volumes:
+      - ./:/var/www
+    depends_on:
+      - mysql
+
+  nginx:
+    image: nginx:alpine
+    container_name: nginx-school-api
+    ports:
+      - "8035:80"   # <-- changed port here to avoid conflict
+    volumes:
+      - ./:/var/www
+      - ./nginx/conf.d:/etc/nginx/conf.d
+    depends_on:
+      - app
+
+  mysql:
+    image: mysql:8.0
+    container_name: mysql-school-api
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: laravel
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_PASSWORD: root
+      MYSQL_USER: laravel
+    ports:
+      - "3418:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: phpmyadmin-shcool-api
+    restart: unless-stopped
+    platform: linux/amd64
+    ports:
+      - "8097:80"   # <-- also moved phpmyadmin to avoid conflict
+    environment:
+      PMA_HOST: mysql-school-api
+      PMA_USER: root
+      PMA_PASSWORD: root
+      UPLOAD_LIMIT: 51200M
+
+  # redis:
+  #   image: redis:alpine
+  #   container_name: redis
+  #   restart: unless-stopped
+  #   ports:
+  #     - "6379:6379"
+volumes:
+  mysql_data:
