@@ -22,7 +22,7 @@ class InvoiceController extends Controller
             return $this->apiResponse(false, 'Invoice not found', null, 404);
         }
 
-        if($invoice->status === 'paid') {
+        if ($invoice->status === 'paid') {
             return $this->apiResponse(false, 'Invoice already paid', null, 400);
         }
 
@@ -53,5 +53,19 @@ class InvoiceController extends Controller
 
     }
 
+    public function checkInvoiceStatus(Request $request, int $id): JsonResponse
+    {
+        $invoice = Invoice::find($id);
+
+        if (!$invoice) {
+            return $this->apiResponse(false, 'Invoice not found', null, 404);
+        }
+
+        $status = Invoice::select('status')->where('id', $id)->first();
+
+
+
+        return $this->apiResponse(true, 'Invoice status retrieved successfully', $status);
+    }
 
 }
