@@ -154,6 +154,7 @@ class AnnouncementController extends Controller
             'date',
             'title',
             'body',
+            'description',
             'grades',
             'grade',
             'created_at',
