@@ -13,6 +13,7 @@ class EventController extends Controller
     {
         $schoolId = $request->input('school_id');
         $academicYearId = $request->input('aay');
+        $type = $request->input('type');
 
         if (!$schoolId || !$academicYearId) {
             return $this->apiResponse(false, 'Invalid request context', null, 400);
@@ -22,13 +23,20 @@ class EventController extends Controller
             return $this->apiResponse(false, 'Event data source not found', null, 500);
         }
 
-        $events = Event::query()
+
+
+        $query = Event::query()
             ->select(['id', 'school_id', 'academic_year_id', 'date', 'title', 'body', 'created_at', 'updated_at'])
             ->where('school_id', $schoolId)
             ->where('academic_year_id', $academicYearId)
             ->orderByDesc('date')
-            ->orderByDesc('id')
-            ->get();
+            ->orderByDesc('id');
+
+        if ($type === 'home') {
+            $query->limit(1);
+        }
+
+        $events = $query->get();
 
         $events->makeHidden(['media']);
 
