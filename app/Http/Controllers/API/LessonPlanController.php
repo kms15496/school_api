@@ -16,14 +16,12 @@ class LessonPlanController extends Controller
         $academicYearId = $request->input('aay');
         $classId = $request->input('class_id');
         $sectionId = $request->input('section_id');
+        $subjectId = $request->input('subject_id');
 
         if (!$schoolId || !$academicYearId) {
             return $this->apiResponse(false, 'Invalid request context', null, 400);
         }
 
-        if (!Schema::hasTable('lesson_plans')) {
-            return $this->apiResponse(false, 'Lesson plan data source not found', null, 500);
-        }
 
         try {
             $targetDate = $request->filled('date')
@@ -37,6 +35,7 @@ class LessonPlanController extends Controller
         $availableColumns = Schema::getColumnListing('lesson_plans');
 
         $lessonPlans = LessonPlan::query()
+        ->where('subject_id', $subjectId)
             ->select($this->getLessonPlanColumns($availableColumns));
 
         $this->applyExactFilter($lessonPlans, $availableColumns, ['school_id'], $schoolId);
@@ -51,7 +50,7 @@ class LessonPlanController extends Controller
             ->get();
 
         if ($lessonPlans->isEmpty()) {
-            return $this->apiResponse(false, 'No lesson plans found for the selected date', [], 404);
+            return $this->apiResponse(false, 'No lesson plans found for the selected date', [], 200);
         }
 
         return $this->apiResponse(true, 'Lesson plans fetched successfully', $lessonPlans);

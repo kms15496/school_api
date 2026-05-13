@@ -49,4 +49,8 @@ Route::group(['middleware' => 'auth:sanctum'], function () {
     Route::post('/set-fcm-token', [\App\Http\Controllers\API\DeviceController::class, 'setFcmToken']);
 
     Route::get('/fees', [\App\Http\Controllers\API\FeeController::class, 'getFees'])->middleware('check.request');
+
+    Route::get('/fee/{fee}/make-payment', [\App\Http\Controllers\API\FeeController::class, 'makePayment'])->middleware('check.request');
+
+    Route::get('/subjects', [\App\Http\Controllers\API\StudentController::class, 'getSubjects'])->middleware('check.request');
 });

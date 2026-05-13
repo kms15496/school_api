@@ -14,7 +14,7 @@ class FeeController extends Controller
         $academicYearId = (int) $request->input('aay');
         $studentId = (int) $request->input('student_id');
 
-        dd($request->all());
+
 
         if (!$schoolId || !$academicYearId || !$studentId) {
             return response()->json([
@@ -52,5 +52,28 @@ class FeeController extends Controller
             ->get();
 
         return $this->apiResponse(true, 'Fees fetched successfully', $result);
+    }
+
+    public function makePayment(Request $request, $feeId)
+    {
+        $schoolId = (int) $request->input('school_id');
+        $academicYearId = (int) $request->input('aay');
+        $studentId = (int) $request->input('student_id');
+
+        if (!$schoolId || !$academicYearId || !$studentId) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Invalid request context',
+                'data' => null,
+            ], 400);
+        }
+
+        // Here you would typically create a payment intent or redirect to a payment gateway
+        // For demonstration, we'll just return a success message with the fee ID
+
+        return $this->apiResponse(true, 'Payment initiated successfully', [
+            'fee_id' => $feeId,
+            'payment_url' => 'https://payment-gateway.example.com/pay?fee_id=' . $feeId . '&student_id=' . $studentId,
+        ]);
     }
 }
