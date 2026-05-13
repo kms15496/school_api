@@ -50,6 +50,10 @@ Route::group(['middleware' => 'auth:sanctum'], function () {
 
     Route::get('/fees', [\App\Http\Controllers\API\FeeController::class, 'getFees'])->middleware('check.request');
 
+    Route::post('/invoice/{id}/make-payment', [\App\Http\Controllers\API\InvoiceController::class, 'makePayment'])->middleware('check.request');
+    Route::post('/invoice/{id}/check-status', [\App\Http\Controllers\API\InvoiceController::class, 'checkInvoiceStatus'])->middleware('check.request');
+
+
     Route::get('/fee/{fee}/make-payment', [\App\Http\Controllers\API\FeeController::class, 'makePayment'])->middleware('check.request');
 
     Route::get('/subjects', [\App\Http\Controllers\API\StudentController::class, 'getSubjects'])->middleware('check.request');
