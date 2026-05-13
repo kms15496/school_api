@@ -32,7 +32,7 @@ class InvoiceController extends Controller
             'school_code' => 'pnpt',
             'amount' => (int) $feeDetail->amount,
             'currency' => 'MMK',
-            'invoice_no' => $invoice->invoice_no,
+            'invoice_no' => (string) $invoice->invoice_no,
             'invoice_id' => (string) $invoice->invoice_id,
             'external_transaction_id' => 'PNPTINV' . $invoice->id,
             'service_code' => 'testayammqr-qr',
