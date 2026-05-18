@@ -59,3 +59,5 @@ Route::group(['middleware' => 'auth:sanctum'], function () {
     Route::get('/subjects', [\App\Http\Controllers\API\StudentController::class, 'getSubjects'])->middleware('check.request');
 });
 
+Route::get('/config', [\App\Http\Controllers\API\ConfigController::class, 'getConfig']);
+
