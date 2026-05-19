@@ -35,7 +35,7 @@ class InvoiceController extends Controller
             'invoice_no' => (string) $invoice->id,
             'invoice_id' => (string) $invoice->invoice_id,
             'external_transaction_id' => 'PNPTINV' . $invoice->id,
-            'service_code' => 'testayammqr-qr',
+            // 'service_code' => 'testayammqr-qr',
         ];
 
         $response = Http::timeout(30)
