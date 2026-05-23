@@ -62,4 +62,4 @@ Route::group(['middleware' => 'auth:sanctum'], function () {
 });
 
 Route::get('/config', [\App\Http\Controllers\API\ConfigController::class, 'getConfig']);
-
+Route::get('/app-icons/{filename}', [\App\Http\Controllers\API\ConfigController::class, 'getAppIcon']);
