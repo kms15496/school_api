@@ -57,6 +57,8 @@ Route::group(['middleware' => 'auth:sanctum'], function () {
     Route::get('/fee/{fee}/make-payment', [\App\Http\Controllers\API\FeeController::class, 'makePayment'])->middleware('check.request');
 
     Route::get('/subjects', [\App\Http\Controllers\API\StudentController::class, 'getSubjects'])->middleware('check.request');
+
+    Route::get('/account-deactive', [\App\Http\Controllers\API\LoginController::class, 'deactivateAccount']);
 });
 
 Route::get('/config', [\App\Http\Controllers\API\ConfigController::class, 'getConfig']);

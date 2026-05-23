@@ -14,6 +14,7 @@ class Parents extends Model
         'password',
         'phone',
         'name',
+        'active'
     ];
 
     protected $hidden = [

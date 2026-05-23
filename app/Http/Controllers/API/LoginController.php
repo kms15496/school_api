@@ -24,6 +24,10 @@ class LoginController extends Controller
 
         $parent = Parents::where('phone', $credentials['phone'])->first();
 
+        if($parent && !$parent->active) {
+            return $this->apiResponse(false, 'Your account has been deactivated. Please contact the school administration for more information.', null, 200);
+        }
+
         if (!$parent || !Hash::check($credentials['password'], $parent->password)) {
             return $this->apiResponse(false, 'Invalid credentials', null, 401);
         }
@@ -36,5 +40,15 @@ class LoginController extends Controller
             'access_token' => $token,
             'token_type' => 'Bearer',
         ], $parentInfo));
+    }
+
+    public function deactivateAccount(Request $request)
+    {
+        $user = $request->user();
+        $user->tokens()->delete();
+
+        $user->update(['active' => 0]);
+
+        return $this->apiResponse(true, 'Account deactivated successfully');
     }
 }
