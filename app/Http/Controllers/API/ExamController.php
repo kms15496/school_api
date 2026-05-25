@@ -18,17 +18,17 @@ class ExamController extends Controller
         $year = $request->integer('year');
 
         if (!$month || !$year) {
-            return $this->apiResponse(false, 'Missing required parameters: month and year', null, 400);
+            return $this->apiResponse(false, 'Missing required parameters: month and year', [], 200);
         }
 
         if ($month < 1 || $month > 12 || $year < 2000 || $year > 2100) {
-            return $this->apiResponse(false, 'Invalid month or year', null, 422);
+            return $this->apiResponse(false, 'Invalid month or year', [], 200);
         }
 
         $academicYearId = $request->input('aay');
         $classId = $request->input('class_id');
         if (!$academicYearId || !$classId) {
-            return $this->apiResponse(false, 'Invalid request context', null, 400);
+            return $this->apiResponse(false, 'Invalid request context', [], 200);
         }
 
         $sessions = ExamSession::query()
@@ -52,7 +52,7 @@ class ExamController extends Controller
             ->get();
 
         if ($sessions->isEmpty()) {
-            return $this->apiResponse(false, 'Exam timetable not found', [], 404);
+            return $this->apiResponse(false, 'Exam timetable not found', [], 200);
         }
 
         $grouped = $sessions->groupBy('date')->map(function ($items, $date) {
@@ -71,7 +71,7 @@ class ExamController extends Controller
         $academicYearId = $request->input('aay');
         $classId = $request->input('class_id');
         if (!$academicYearId || !$classId) {
-            return $this->apiResponse(false, 'Invalid request context', null, 400);
+            return $this->apiResponse(false, 'Invalid request context', [], 200);
         }
 
         $exams = Exam::query()
@@ -82,7 +82,7 @@ class ExamController extends Controller
             ->get();
 
         if ($exams->isEmpty()) {
-            return $this->apiResponse(false, 'No exams found for the student\'s class and academic year', [], 404);
+            return $this->apiResponse(false, 'No exams found for the student\'s class and academic year', [], 200);
         }
 
         return $this->apiResponse(true, 'Exams fetched successfully', $exams);
@@ -93,11 +93,11 @@ class ExamController extends Controller
         $academicYearId = $request->input('aay');
         $classId = $request->input('class_id');
         if (!$academicYearId || !$classId) {
-            return $this->apiResponse(false, 'Invalid request context', null, 400);
+            return $this->apiResponse(false, 'Invalid request context', [], 404);
         }
 
         if ($exam->school_class_id != $classId || $exam->academic_year_id != $academicYearId) {
-            return $this->apiResponse(false, 'Exam not found for the student\'s class and academic year', null, 404);
+            return $this->apiResponse(false, 'Exam not found for the student\'s class and academic year', [], 200);
         }
 
         $exam->load(['sessions.subject']);
@@ -110,11 +110,11 @@ class ExamController extends Controller
         $academicYearId = $request->input('aay');
         $classId = $request->input('class_id');
         if (!$academicYearId || !$classId) {
-            return $this->apiResponse(false, 'Invalid request context', null, 400);
+            return $this->apiResponse(false, 'Invalid request context', [], 404);
         }
 
         if ($exam->school_class_id != $classId || $exam->academic_year_id != $academicYearId) {
-            return $this->apiResponse(false, 'Exam not found for the student\'s class and academic year', null, 404);
+            return $this->apiResponse(false, 'Exam not found for the student\'s class and academic year', [], 200);
         }
 
         $sessions = $exam->sessions()
@@ -129,7 +129,7 @@ class ExamController extends Controller
             ->get();
 
         if ($sessions->isEmpty()) {
-            return $this->apiResponse(false, 'No sessions found for this exam', [], 404);
+            return $this->apiResponse(false, 'No sessions found for this exam', [], 200);
         }
 
         return $this->apiResponse(true, 'Exam sessions fetched successfully', $sessions);
@@ -142,11 +142,11 @@ class ExamController extends Controller
         $studentId = $request->input('student_id');
         $examId = $request->input('exam_id');
         if (!$academicYearId || !$classId || !$studentId || !$examId) {
-            return $this->apiResponse(false, 'Missing required parameters: exam_id', null, 400);
+            return $this->apiResponse(false, 'Missing required parameters: exam_id', [], 200);
         }
 
         if (!Schema::hasTable('exam_session_marks')) {
-            return $this->apiResponse(false, 'Report card data source not found', null, 500);
+            return $this->apiResponse(false, 'Report card data source not found', [], 500);
         }
 
         $markColumns = Schema::getColumnListing('exam_session_marks');
@@ -158,7 +158,7 @@ class ExamController extends Controller
         }
 
         if (!$sessionForeignKey || !in_array('student_id', $markColumns, true)) {
-            return $this->apiResponse(false, 'Report card table is misconfigured', null, 500);
+            return $this->apiResponse(false, 'Report card table is misconfigured', [], 500);
         }
 
         $rows = DB::table('exam_session_marks as esm')

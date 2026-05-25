@@ -16,7 +16,7 @@ class EventController extends Controller
         $type = $request->input('type');
 
         if (!$schoolId || !$academicYearId) {
-            return $this->apiResponse(false, 'Invalid request context', null, 400);
+            return $this->apiResponse(false, 'Invalid request context', [], 200);
         }
 
         if (!Schema::hasTable('events')) {
@@ -41,7 +41,7 @@ class EventController extends Controller
         $events->makeHidden(['media']);
 
         if ($events->isEmpty()) {
-            return $this->apiResponse(false, 'No events found for the school and academic year', [], 404);
+            return $this->apiResponse(false, 'No events found for the school and academic year', [], 200);
         }
 
         return $this->apiResponse(true, 'Events fetched successfully', $events);
@@ -53,11 +53,11 @@ class EventController extends Controller
         $academicYearId = $request->input('aay');
 
         if (!$schoolId || !$academicYearId) {
-            return $this->apiResponse(false, 'Invalid request context', null, 400);
+            return $this->apiResponse(false, 'Invalid request context', [], 200);
         }
 
         if ($event->school_id != $schoolId || $event->academic_year_id != $academicYearId) {
-            return $this->apiResponse(false, 'Event not found for the school and academic year', null, 404);
+            return $this->apiResponse(false, 'Event not found for the school and academic year', [], 200);
         }
 
         $event->makeHidden(['media']);

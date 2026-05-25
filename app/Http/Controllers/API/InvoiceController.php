@@ -19,11 +19,11 @@ class InvoiceController extends Controller
         $invoice = Invoice::find($id);
 
         if (!$invoice) {
-            return $this->apiResponse(false, 'Invoice not found', null, 404);
+            return $this->apiResponse(false, 'Invoice not found', null, 200);
         }
 
         if ($invoice->status === 'paid') {
-            return $this->apiResponse(false, 'Invoice already paid', null, 400);
+            return $this->apiResponse(false, 'Invoice already paid', null, 200);
         }
 
         $feeDetail = $invoice->feeDetail;
