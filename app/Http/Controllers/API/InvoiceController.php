@@ -10,13 +10,23 @@ use Illuminate\Http\JsonResponse;
 
 use Illuminate\Support\Facades\Http;
 use Illuminate\Http\Request;
-
+use App\Repositories\StudentRepository;
 
 class InvoiceController extends Controller
 {
+    protected $studentRepository;
+
+    public function __construct(StudentRepository $studentRepository)
+    {
+        $this->studentRepository = $studentRepository;
+    }
     public function makePayment(Request $request, int $id): JsonResponse
     {
         $invoice = Invoice::find($id);
+
+        $invoice_number = explode('-', $invoice->invoice_id);
+        $invoice_number = $invoice_number[0] . '-' . $invoice_number[1];
+        $student = $this->studentRepository->getStudent($invoice->student_id);
 
         if (!$invoice) {
             return $this->apiResponse(false, 'Invoice not found', null, 200);
@@ -28,20 +38,28 @@ class InvoiceController extends Controller
 
         $feeDetail = $invoice->feeDetail;
 
+
+
         $payload = [
-            'school_code' => 'pnpt',
-            'amount' => (int) $feeDetail->amount,
-            'currency' => 'MMK',
-            'invoice_no' => (string) $invoice->id,
-            'invoice_id' => (string) $invoice->invoice_id,
-            'external_transaction_id' => 'PNPTINV' . $invoice->id,
-            // 'service_code' => 'testayammqr-qr',
+            'amount' => $invoice->feeDetail->amount - ($invoice->discount->amount ?? 0),
+            'invoice_no' => $invoice_number,
+            'first_name' => $student->name,
+            'last_name' => '-',
+            'phone' => $student->phone,
+            'email' => 'dev@icec.com',
+            'school_code' => 'icec',
+            'invoice_id' => $invoice->invoice_id,
+            'UserDefined1' => env('SCHOOL_NAME', 'ICEC'),
+            'UserDefined2' => $student->name,
+            'UserDefined3' => $invoice->invoice_id,
+            'UserDefined4' => $student->class_name,
+            'UserDefined5' => $student->phone,
         ];
 
         $response = Http::timeout(30)
             ->acceptJson()
             ->post(
-                'https://pgw.asiadigitalplus.com/api/aya/request-qr-payment',
+                'https://pgw.asiadigitalplus.com/api/mmqr/request-payment',
                 $payload
             );
 
