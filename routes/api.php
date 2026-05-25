@@ -16,6 +16,8 @@ Route::post('/login', [\App\Http\Controllers\API\LoginController::class, 'parent
 
 Route::group(['middleware' => 'auth:sanctum'], function () {
     Route::get('/get-info', [\App\Http\Controllers\API\InfoController::class, 'getInfo']);
+    Route::get('/config', [\App\Http\Controllers\API\ConfigController::class, 'getConfig']);
+
 
     Route::group(['prefix' => 'student', 'middleware' => ['check.student.parent', 'check.request']], function () {
 
@@ -61,4 +63,3 @@ Route::group(['middleware' => 'auth:sanctum'], function () {
     Route::get('/account-deactive', [\App\Http\Controllers\API\LoginController::class, 'deactivateAccount']);
 });
 
-Route::get('/config', [\App\Http\Controllers\API\ConfigController::class, 'getConfig']);
