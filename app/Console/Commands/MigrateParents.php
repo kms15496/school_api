@@ -79,7 +79,7 @@ class MigrateParents extends Command
                     $rows[] = [
                         'phone'      => $student->phone,
                         'name'       => $student->father_name ?? 'Parent of Student ' . $student->id,
-                        'password'   => Hash::make($student->phone), // or Hash::make('123456')
+                        'password'   => Hash::make('pnpt123'), // or Hash::make('123456')
                         'created_at' => now(),
                         'updated_at' => now(),
                     ];
