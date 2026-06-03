@@ -12,7 +12,7 @@ class ConfigController extends Controller
             'screen' => [
                 [
                     'key' => 'lesson_plan',
-                    'enabled' => true,
+                    'enabled' => false,
                     'order' => 1,
                     'image' => env('APP_URL') . '/app_icons/icon_lesson.png',
                 ],
@@ -24,19 +24,19 @@ class ConfigController extends Controller
                 ],
                 [
                     'key' => 'attendance',
-                    'enabled' => true,
+                    'enabled' => false,
                     'order' => 3,
                     'image' => env('APP_URL') . '/app_icons/icon_attendance.png',
                 ],
                 [
                     'key' => 'exam_timetable',
-                    'enabled' => true,
+                    'enabled' => false,
                     'order' => 4,
                     'image' => env('APP_URL') . '/app_icons/icon_exam.png',
                 ],
                 [
                     'key' => 'report_card',
-                    'enabled' => true,
+                    'enabled' => false,
                     'order' => 5,
                     'image' => env('APP_URL') . '/app_icons/icon_result.png',
                 ],
