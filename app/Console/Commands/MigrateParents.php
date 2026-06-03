@@ -5,98 +5,69 @@ namespace App\Console\Commands;
 use Illuminate\Console\Command;
 use App\Models\Student;
 use App\Models\Parents as ParentModel;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 
 class MigrateParents extends Command
 {
-    /**
-     * The name and signature of the console command.
-     *
-     * @var string
-     */
     protected $signature = 'app:migrate-parents';
 
-    /**
-     * The console command description.
-     *
-     * @var string
-     */
-    protected $description = 'Migrate parents from students phone (unique by phone)';
+    protected $description = 'Migrate parents from students phone';
 
-    /**
-     * Normalize phone number to avoid duplicates caused by formatting.
-     */
-    private function normalizePhone(?string $phone): string
-    {
-        $phone = trim((string) $phone);
-
-        if ($phone === '') {
-            return '';
-        }
-
-        // Remove spaces, dashes, parentheses
-        $phone = preg_replace('/[\s\-\(\)]+/', '', $phone);
-
-        // Optional: convert "+95xxxxxxxxx" to "0xxxxxxxxx"
-        // Adjust this rule if your system stores +95 differently.
-        if (str_starts_with($phone, '+95')) {
-            $phone = '0' . substr($phone, 3);
-        }
-
-        // Optional: if someone stored "959..." without plus
-        if (str_starts_with($phone, '959')) {
-            $phone = '0' . substr($phone, 2); // 959 -> 09
-        }
-
-        return $phone;
-    }
-
-    /**
-     * Execute the console command.
-     */
     public function handle()
     {
         $this->info('Starting parents migration...');
 
-        $totalInsertedOrIgnored = 0;
+        $processed = 0;
 
         Student::query()
-            ->select(['id', 'phone','father_name'])
-            // ->whereNotNull('phone')
-            // ->where('phone', '!=', '')
+            ->select(['id', 'phone', 'father_name'])
+            ->whereNotNull('phone')
+            ->where('phone', '!=', '')
+            ->whereNotExists(function ($query) {
+                $query->select(DB::raw(1))
+                    ->from('parents')
+                    ->whereColumn('parents.phone', 'students.phone');
+            })
             ->orderBy('id')
-            ->chunkById(200, function ($students) use (&$totalInsertedOrIgnored) {
+            ->chunkById(200, function ($students) use (&$processed) {
 
                 $rows = [];
+                $usedPhones = [];
 
                 foreach ($students as $student) {
-                    $phone = $this->normalizePhone($student->phone);
+                    $phone = trim($student->phone);
 
-                    // if ($phone === '') {
-                    //     continue;
-                    // }
+                    if ($phone === '') {
+                        continue;
+                    }
+
+                    // skip duplicate phone inside same chunk
+                    if (isset($usedPhones[$phone])) {
+                        continue;
+                    }
+
+                    $usedPhones[$phone] = true;
 
                     $rows[] = [
-                        'phone'      => $student->phone,
-                        'name'       => $student->father_name ?? 'Parent of Student ' . $student->id,
-                        'password'   => Hash::make('pnpt123'), // or Hash::make('123456')
+                        'phone'      => $phone,
+                        'name'       => $student->father_name ?: 'Parent of Student ' . $student->id,
+                        'password'   => Hash::make('pnpt123'),
                         'created_at' => now(),
                         'updated_at' => now(),
                     ];
                 }
 
-                if (empty($rows)) {
-                    return;
+                if (!empty($rows)) {
+                    ParentModel::insertOrIgnore($rows);
+
+                    $processed += count($rows);
+
+                    $this->line('Processed: ' . count($rows));
                 }
-
-                ParentModel::upsert($rows, ['phone'], []);
-
-                $totalInsertedOrIgnored += count($rows);
-
-                $this->line('Processed chunk: ' . count($rows) . ' rows');
             });
 
-        $this->info("Done. Processed ~{$totalInsertedOrIgnored} rows (duplicates ignored by unique phone).");
+        $this->info("Done. Processed: {$processed}");
 
         return Command::SUCCESS;
     }
