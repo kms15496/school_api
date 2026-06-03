@@ -20,7 +20,7 @@ class ConfigController extends Controller
                     'key' => 'school_fees',
                     'enabled' => true,
                     'order' => 2,
-                    'image' => env('APP_URL') . '/app_icons/icon_fees.png',
+                    'image' => env('APP_URL') . '/icecicon/feesgreen.png',
                 ],
                 [
                     'key' => 'attendance',
@@ -44,13 +44,13 @@ class ConfigController extends Controller
                     'key' => 'announcements',
                     'enabled' => true,
                     'order' => 6,
-                    'image' => env('APP_URL') . '/app_icons/icon_information.png',
+                    'image' => env('APP_URL') . '/icecicon/announcement.png',
                 ],
                 [
                     'key' => 'school_events',
                     'enabled' => true,
                     'order' => 7,
-                    'image' => env('APP_URL') . '/app_icons/icon_events.png',
+                    'image' => env('APP_URL') . '/icecicon/schoolevents.png',
                 ],
                 [
                     'key' => 'school_info',
