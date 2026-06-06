@@ -19,18 +19,18 @@ class AnnouncementController extends Controller
 
 
         if (!$schoolId || !$academicYearId || !$studentId) {
-            return $this->apiResponse(false, 'Invalid request context', null, 400);
+            return $this->apiResponse(false, 'Invalid request context', [], 200);
         }
 
         if (!Schema::hasTable('announcements')) {
-            return $this->apiResponse(false, 'Announcement data source not found', null, 500);
+            return $this->apiResponse(false, 'Announcement data source not found', [], 200);
         }
 
         $studentGrade = $this->resolveStudentGrade($studentId, $academicYearId);
 
 
         if ($studentGrade === null) {
-            return $this->apiResponse(false, 'Student grade not found for the academic year', null, 404);
+            return $this->apiResponse(false, 'Student grade not found for the academic year', [], 200);
         }
 
         $columns = $this->getAnnouncementColumns();
@@ -51,7 +51,7 @@ class AnnouncementController extends Controller
         'created_at','updated_at']);
 
         if ($announcements->isEmpty()) {
-            return $this->apiResponse(false, 'No announcements found for the student grade and academic year', [], 404);
+            return $this->apiResponse(false, 'No announcements found for the student grade and academic year', [], 200);
         }
 
         return $this->apiResponse(true, 'Announcements fetched successfully', $announcements);
