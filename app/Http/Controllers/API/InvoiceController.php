@@ -11,6 +11,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Http\Request;
 use App\Repositories\StudentRepository;
+use App\Models\School;
 
 class InvoiceController extends Controller
 {
@@ -28,6 +29,8 @@ class InvoiceController extends Controller
         $invoice_number = $invoice_number[0] . '-' . $invoice_number[1];
         $student = $this->studentRepository->getStudent($invoice->student_id);
 
+        $school = School::where('id', $student->school_id)->first();
+
         if (!$invoice) {
             return $this->apiResponse(false, 'Invoice not found', null, 200);
         }
@@ -38,8 +41,6 @@ class InvoiceController extends Controller
 
         $feeDetail = $invoice->feeDetail;
 
-
-
         $payload = [
             'amount' => $invoice->feeDetail->amount - ($invoice->discount->amount ?? 0),
             'invoice_no' => $invoice_number,
@@ -49,7 +50,7 @@ class InvoiceController extends Controller
             'email' => 'dev@icec.com',
             'school_code' => 'icec',
             'invoice_id' => $invoice->invoice_id,
-            'UserDefined1' => env('SCHOOL_NAME', 'ICEC'),
+            'UserDefined1' => $school->name,
             'UserDefined2' => $student->name,
             'UserDefined3' => $invoice->invoice_id,
             'UserDefined4' => $student->class_name,
