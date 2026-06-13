@@ -3,9 +3,8 @@
 namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
-use App\Models\Timetable;
+use App\Models\ClassTimeTable as TimeTable;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Schema;
 
 class TimetableController extends Controller
 {
@@ -17,6 +16,8 @@ class TimetableController extends Controller
         $sectionId = $request->input('section_id');
         $day = $request->input('day');
 
+       
+
         if (!$schoolId || !$academicYearId || !$classId || !$sectionId) {
             return $this->apiResponse(false, 'Invalid request context', [], 200);
         }
@@ -25,43 +26,38 @@ class TimetableController extends Controller
             return $this->apiResponse(false, 'Missing required parameter: day', [], 200);
         }
 
-        $dayValues = $this->normalizeDayFilter($day);
-        if (empty($dayValues)) {
+        $day = $this->normalizeDay($day);
+        if (!$day) {
             return $this->apiResponse(false, 'Invalid day', [], 200);
         }
 
-        if (!Schema::hasTable('timetables')) {
-            return $this->apiResponse(false, 'Timetable data source not found', [], 500);
-        }
-
-        $availableColumns = Schema::getColumnListing('timetables');
-        $dayColumn = $this->resolveColumn($availableColumns, ['day', 'weekday', 'day_of_week']);
-
-        if (!$dayColumn) {
-            return $this->apiResponse(false, 'Timetable table is misconfigured', [], 500);
-        }
-
-        $query = Timetable::query()
-            ->select($this->getTimetableColumns($availableColumns));
-
-        $this->applyExactFilter($query, $availableColumns, ['school_id'], $schoolId);
-        $this->applyExactFilter($query, $availableColumns, ['academic_year_id', 'aay'], $academicYearId);
-        $this->applyExactFilter($query, $availableColumns, ['school_class_id', 'class_id', 'grade_id', 'grade'], $classId);
-        $this->applyExactFilter($query, $availableColumns, ['section_id'], $sectionId);
-
-        $query->whereIn($dayColumn, $dayValues);
-
-        if (in_array('subject_id', $availableColumns, true)) {
-            $query->with([
+        $query = TimeTable::query()
+            ->select([
+                'id',
+                'school_id',
+                'academic_year_id',
+                'school_class_id',
+                'class_section_id',
+                'subject_id',
+                'day',
+                'period',
+                'start_time',
+                'end_time',
+            ])
+            ->where('school_id', $schoolId)
+            ->where('academic_year_id', $academicYearId)
+            ->where('school_class_id', $classId)
+            ->where('class_section_id', $sectionId)
+            ->where('day', $day)
+            ->with([
                 'subject' => function ($subjectQuery) {
                     $subjectQuery->select(['id', 'name', 'code', 'optional']);
                 },
-            ]);
-        }
+            ])
+            ->orderBy('period')
+            ->orderBy('start_time')
+            ->orderBy('id');
 
-        foreach ($this->getSortColumns($availableColumns) as $sortColumn) {
-            $query->orderBy($sortColumn);
-        }
 
         $timetables = $query->get();
 
@@ -72,93 +68,12 @@ class TimetableController extends Controller
         return $this->apiResponse(true, 'Timetable fetched successfully', $timetables);
     }
 
-    private function applyExactFilter($query, array $availableColumns, array $candidates, mixed $value): void
+    private function normalizeDay(string $day): ?string
     {
-        if ($value === null || $value === '') {
-            return;
-        }
+        $day = ucfirst(strtolower(trim($day)));
 
-        foreach ($candidates as $column) {
-            if (in_array($column, $availableColumns, true)) {
-                $query->where($column, $value);
-                return;
-            }
-        }
-    }
-
-    private function getTimetableColumns(array $availableColumns): array
-    {
-        $preferredColumns = [
-            'id',
-            'school_id',
-            'academic_year_id',
-            'school_class_id',
-            'class_id',
-            'section_id',
-            'subject_id',
-            'day',
-            'weekday',
-            'day_of_week',
-            'period',
-            'period_no',
-            'start_time',
-            'end_time',
-            'order',
-            'created_at',
-            'updated_at',
-        ];
-
-        $selectedColumns = array_values(array_intersect($preferredColumns, $availableColumns));
-
-        return empty($selectedColumns) ? ['*'] : $selectedColumns;
-    }
-
-    private function getSortColumns(array $availableColumns): array
-    {
-        $preferredColumns = ['order', 'period', 'period_no', 'start_time', 'id'];
-
-        return array_values(array_intersect($preferredColumns, $availableColumns));
-    }
-
-    private function normalizeDayFilter(string $day): array
-    {
-        $days = [
-            'monday' => ['monday', 'mon', '1'],
-            'tuesday' => ['tuesday', 'tue', 'tues', '2'],
-            'wednesday' => ['wednesday', 'wed', '3'],
-            'thursday' => ['thursday', 'thu', 'thur', 'thurs', '4'],
-            'friday' => ['friday', 'fri', '5'],
-            'saturday' => ['saturday', 'sat', '6'],
-            'sunday' => ['sunday', 'sun', '7', '0'],
-        ];
-
-        $normalized = strtolower(trim($day));
-        foreach ($days as $fullDay => $aliases) {
-            if (in_array($normalized, $aliases, true)) {
-                $shortDay = ucfirst(substr($fullDay, 0, 3));
-                $fullDay = ucfirst($fullDay);
-
-                return array_values(array_unique([
-                    $fullDay,
-                    strtolower($fullDay),
-                    strtoupper($fullDay),
-                    $shortDay,
-                    strtolower($shortDay),
-                    strtoupper($shortDay),
-                    ...array_filter($aliases, fn ($alias) => is_numeric($alias)),
-                ]));
-            }
-        }
-
-        return [];
-    }
-
-    private function resolveColumn(array $availableColumns, array $candidates): ?string
-    {
-        foreach ($candidates as $column) {
-            if (in_array($column, $availableColumns, true)) {
-                return $column;
-            }
+        if (in_array($day, TimeTable::DAYS, true)) {
+            return $day;
         }
 
         return null;
