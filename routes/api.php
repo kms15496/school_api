@@ -48,6 +48,10 @@ Route::group(['middleware' => 'auth:sanctum'], function () {
         Route::get('/', [\App\Http\Controllers\API\LessonPlanController::class, 'getList']);
     });
 
+    Route::group(['prefix' => 'timetable', 'middleware' => ['check.request']], function () {
+        Route::get('/', [\App\Http\Controllers\API\TimetableController::class, 'getList']);
+    });
+
     Route::post('/set-fcm-token', [\App\Http\Controllers\API\DeviceController::class, 'setFcmToken']);
 
     Route::get('/fees', [\App\Http\Controllers\API\FeeController::class, 'getFees'])->middleware('check.request');
@@ -62,4 +66,3 @@ Route::group(['middleware' => 'auth:sanctum'], function () {
 
     Route::get('/account-deactive', [\App\Http\Controllers\API\LoginController::class, 'deactivateAccount']);
 });
-
