@@ -10,6 +10,12 @@ class ConfigController extends Controller
     {
         $config = [
             'screen' => [
+                 [
+                    'key' => 'timetable',
+                    'enabled' => true,
+                    'order' => 1,
+                    'image' => env('APP_URL') . '/app_icons/icon_lesson.png',
+                ],
                 [
                     'key' => 'lesson_plan',
                     'enabled' => true,
