@@ -14,7 +14,7 @@ class ConfigController extends Controller
                     'key' => 'timetable',
                     'enabled' => true,
                     'order' => 1,
-                    'image' => env('APP_URL') . '/app_icons/icon_lesson.png',
+                    'image' => env('APP_URL') . '/app_icons/icon_timetable.png',
                 ],
                 [
                     'key' => 'lesson_plan',
