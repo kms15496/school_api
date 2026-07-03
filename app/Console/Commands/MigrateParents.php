@@ -61,7 +61,7 @@ class MigrateParents extends Command
         $totalInsertedOrIgnored = 0;
 
         Student::query()
-            ->select(['id', 'phone','father_name'])
+            ->select(['id', 'phone', 'father_name'])
             // ->whereNotNull('phone')
             // ->where('phone', '!=', '')
             ->orderBy('id')
@@ -77,9 +77,9 @@ class MigrateParents extends Command
                     // }
 
                     $rows[] = [
-                        'phone'      => $student->phone,
-                        'name'       => $student->father_name ?? 'Parent of Student ' . $student->id,
-                        'password'   => Hash::make($student->phone), // or Hash::make('123456')
+                        'phone' => $student->phone,
+                        'name' => $student->father_name ?? 'Parent of Student ' . $student->id,
+                        'password' => Hash::make('icec321'), // or Hash::make('123456')
                         'created_at' => now(),
                         'updated_at' => now(),
                     ];
