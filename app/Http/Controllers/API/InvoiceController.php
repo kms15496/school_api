@@ -60,7 +60,7 @@ class InvoiceController extends Controller
         $response = Http::timeout(30)
             ->acceptJson()
             ->post(
-                'https://pgw.asiadigitalplus.com/api/mmqr/request-payment',
+                'https://pgw.asiadigitalplus.com/api/a+/request-qr',
                 $payload
             );
 
