@@ -48,7 +48,7 @@ class InvoiceController extends Controller
             'last_name' => '-',
             'phone' => $student->phone,
             'email' => 'dev@icec.com',
-            'school_code' => 'icec',
+            'school_code' => 'aplus',
             'invoice_id' => $invoice->invoice_id,
             'UserDefined1' => $school->name,
             'UserDefined2' => $student->name,
