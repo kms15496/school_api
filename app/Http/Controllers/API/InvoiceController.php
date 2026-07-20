@@ -65,7 +65,7 @@ class InvoiceController extends Controller
             );
 
         if (!$response->successful()) {
-            return $this->apiResponse(false, 'Failed to request QR payment', null, $response->status());
+            return $this->apiResponse(false, 'Failed to request QR payment', $response->json(), $response->status());
         }
 
         return $this->apiResponse(true, 'QR payment requested successfully', $response->json());
