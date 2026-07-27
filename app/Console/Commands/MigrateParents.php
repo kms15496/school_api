@@ -58,45 +58,76 @@ class MigrateParents extends Command
     {
         $this->info('Starting parents migration...');
 
-        $totalInsertedOrIgnored = 0;
+        $parentRowsByPhone = [];
+        $totalStudentsAttached = 0;
 
         Student::query()
             ->select(['id', 'phone', 'father_name'])
-            // ->whereNotNull('phone')
-            // ->where('phone', '!=', '')
             ->orderBy('id')
-            ->chunkById(200, function ($students) use (&$totalInsertedOrIgnored) {
-
-                $rows = [];
-
+            ->chunkById(200, function ($students) use (&$parentRowsByPhone) {
                 foreach ($students as $student) {
                     $phone = $this->normalizePhone($student->phone);
 
-                    // if ($phone === '') {
-                    //     continue;
-                    // }
+                    if ($phone === '' || isset($parentRowsByPhone[$phone])) {
+                        continue;
+                    }
 
-                    $rows[] = [
-                        'phone' => $student->phone,
-                        'name' => $student->father_name ?? 'Parent of Student ' . $student->id,
+                    $parentRowsByPhone[$phone] = [
+                        'phone' => $phone,
+                        'name' => $student->father_name ?: 'Parent of Student ' . $student->id,
                         'password' => Hash::make('icec321'), // or Hash::make('123456')
                         'created_at' => now(),
                         'updated_at' => now(),
                     ];
                 }
+            });
 
-                if (empty($rows)) {
+        foreach (array_chunk($parentRowsByPhone, 200) as $rows) {
+            ParentModel::insertOrIgnore(array_values($rows));
+            $this->line('Processed parent rows: ' . count($rows));
+        }
+
+        Student::query()
+            ->select(['id', 'phone', 'parent_id'])
+            ->orderBy('id')
+            ->chunkById(200, function ($students) use (&$totalStudentsAttached) {
+                $studentPhones = [];
+
+                foreach ($students as $student) {
+                    $phone = $this->normalizePhone($student->phone);
+
+                    if ($phone === '') {
+                        continue;
+                    }
+
+                    $studentPhones[$student->id] = $phone;
+                }
+
+                if (empty($studentPhones)) {
                     return;
                 }
 
-                ParentModel::upsert($rows, ['phone'], []);
+                $parentsByPhone = ParentModel::whereIn('phone', array_unique($studentPhones))
+                    ->get()
+                    ->keyBy('phone');
 
-                $totalInsertedOrIgnored += count($rows);
+                foreach ($students as $student) {
+                    $phone = $studentPhones[$student->id] ?? null;
+                    $parent = $phone ? $parentsByPhone->get($phone) : null;
 
-                $this->line('Processed chunk: ' . count($rows) . ' rows');
+                    if (!$parent || $student->parent_id === $parent->id) {
+                        continue;
+                    }
+
+                    $student->parent_id = $parent->id;
+                    $student->save();
+                    $totalStudentsAttached++;
+                }
+
+                $this->line('Attached students so far: ' . $totalStudentsAttached);
             });
 
-        $this->info("Done. Processed ~{$totalInsertedOrIgnored} rows (duplicates ignored by unique phone).");
+        $this->info('Done. Processed ' . count($parentRowsByPhone) . " unique parent phones and attached {$totalStudentsAttached} students.");
 
         return Command::SUCCESS;
     }
