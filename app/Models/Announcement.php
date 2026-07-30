@@ -10,17 +10,10 @@ class Announcement extends Model implements HasMedia
 {
     use InteractsWithMedia;
 
-    protected $fillable = [
-        'school_id',
-        'academic_year_id',
-        'date',
-        'title',
-        'body',
-        'grades',
-    ];
-
+    protected $guarded = ['id'];
     protected $casts = [
-        'grades' => 'array',
+        'class_id' => 'array',
+        'date' => 'date',
     ];
 
     protected $appends = [

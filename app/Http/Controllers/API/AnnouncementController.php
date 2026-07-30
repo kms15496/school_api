@@ -13,50 +13,57 @@ class AnnouncementController extends Controller
 {
     public function getList(Request $request)
     {
-        $schoolId = $request->input('school_id');
-        $academicYearId = $request->input('aay');
-        $studentId = $request->input('student_id');
+        $validated = $request->validate([
+            'school_id' => ['required', 'integer'],
+            'aay' => ['required', 'integer'],
+            'student_id' => ['required', 'integer'],
+        ]);
 
+    
+        $studentClassId = StudentAcademicYear::query()
+            ->where('student_id', $validated['student_id'])
+            ->where('academic_year_id', $validated['aay'])
+            ->where('school_id', $validated['school_id'])
+            ->value('school_class_id');
 
-        if (!$schoolId || !$academicYearId || !$studentId) {
-            return $this->apiResponse(false, 'Invalid request context', [], 200);
+        if (!$studentClassId) {
+            return $this->apiResponse(
+                false,
+                'Student class not found for the academic year',
+                [],
+                200
+            );
         }
-
-        if (!Schema::hasTable('announcements')) {
-            return $this->apiResponse(false, 'Announcement data source not found', [], 200);
-        }
-
-        $studentGrade = $this->resolveStudentGrade($studentId, $academicYearId);
-
-
-        if ($studentGrade === null) {
-            return $this->apiResponse(false, 'Student grade not found for the academic year', [], 200);
-        }
-
-        $columns = $this->getAnnouncementColumns();
 
         $announcements = Announcement::query()
-            ->select($columns)
-            ->where('school_id', $schoolId)
-            ->where('academic_year_id', $academicYearId);
-
-        $this->applyGradeFilter($announcements, $studentGrade);
-
-        $announcements = $announcements
+            ->select($this->getAnnouncementColumns())
+            ->where('school_id', $validated['school_id'])
+            ->where('academic_year_id', $validated['aay'])
+            ->whereJsonContains('class_id', (string) $studentClassId)
             ->orderByDesc('date')
             ->orderByDesc('id')
-            ->get();
-
-        $announcements->makeHidden(['media',
-        'created_at','updated_at']);
+            ->get()
+            ->makeHidden([
+                'media',
+                'created_at',
+                'updated_at',
+            ]);
 
         if ($announcements->isEmpty()) {
-            return $this->apiResponse(false, 'No announcements found for the student grade and academic year', [], 200);
+            return $this->apiResponse(
+                false,
+                'No announcements found for the student class and academic year',
+                [],
+                200
+            );
         }
 
-        return $this->apiResponse(true, 'Announcements fetched successfully', $announcements);
+        return $this->apiResponse(
+            true,
+            'Announcements fetched successfully',
+            $announcements
+        );
     }
-
     public function getDetail(Request $request, int $announcementId)
     {
         $schoolId = $request->input('school_id');
