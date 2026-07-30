@@ -12,12 +12,24 @@ class ParentInfoRepository
     public function buildParentInfo(Parents $parent): array
     {
         $students = Student::where('parent_id', $parent->id)
-            ->select('id', 'name', 'parent_id', 'school_id')
+            ->leftJoin(
+                'student_academic_years',
+                'students.id',
+                '=',
+                'student_academic_years.student_id'
+            )
+            ->where('student_academic_years.status', 1)
+            ->select(
+                'students.id',
+                'students.name',
+                'students.parent_id',
+                'students.school_id'
+            )
             ->get();
 
         $parent->setRelation('students', $students);
 
-        $studentIds = $students->pluck('id');
+        // $studentIds = $students->pluck('id');
         $schoolIds = $students->pluck('school_id')->filter()->unique();
 
         $schools = $schoolIds->isEmpty()
