@@ -76,6 +76,15 @@ class FeeController extends Controller
             ->orderBy('fed.due_date')
             ->get();
 
+        $previousInvoicePaid = true;
+
+        $result = $result->map(function ($fee) use (&$previousInvoicePaid) {
+            $fee->is_payable = $previousInvoicePaid && $fee->invoice_status !== 'paid';
+            $previousInvoicePaid = $fee->invoice_status === 'paid';
+
+            return $fee;
+        });
+
         return $this->apiResponse(true, 'Fees fetched successfully', $result);
     }
 
