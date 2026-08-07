@@ -80,7 +80,7 @@ class FeeController extends Controller
         $previousInvoicePaid = true;
 
         $result = $result->map(function ($fee) use (&$previousInvoicePaid) {
-            $fee->is_payable = $previousInvoicePaid;
+            $fee->is_payable = $previousInvoicePaid && $fee->invoice_status !== 'paid';
             $previousInvoicePaid = $fee->invoice_status === 'paid';
 
             return $fee;
