@@ -18,10 +18,19 @@ class Announcement extends Model implements HasMedia
 
     protected $appends = [
         'image_path',
+        'image_paths',
     ];
 
     public function getImagePathAttribute(): ?string
     {
         return $this->getFirstMediaUrl('announcements') ?: null;
+    }
+
+    public function getImagePathsAttribute(): array
+    {
+        return $this->getMedia('announcements')
+            ->map(fn ($media) => $media->getUrl())
+            ->values()
+            ->all();
     }
 }
