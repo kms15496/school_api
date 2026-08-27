@@ -18,12 +18,21 @@ class Event extends Model implements HasMedia
         'body',
     ];
 
-    protected $appends = [
+   protected $appends = [
         'image_path',
+        'image_paths',
     ];
 
     public function getImagePathAttribute(): ?string
     {
         return $this->getFirstMediaUrl('events') ?: null;
+    }
+
+    public function getImagePathsAttribute(): array
+    {
+        return $this->getMedia('events')
+            ->map(fn($media) => $media->getUrl())
+            ->values()
+            ->all();
     }
 }
