@@ -58,39 +58,15 @@ class MigrateParents extends Command
     {
         $this->info('Starting parents migration...');
 
-        $parentRowsByPhone = [];
+        $defaultPassword = Hash::make('icec321'); // or Hash::make('123456')
+        $totalParentsProcessed = 0;
         $totalStudentsAttached = 0;
 
         Student::query()
-            ->select(['id', 'phone', 'father_name'])
+            ->select(['id', 'phone', 'father_name', 'parent_id'])
             ->orderBy('id')
-            ->chunkById(200, function ($students) use (&$parentRowsByPhone) {
-                foreach ($students as $student) {
-                    $phone = $this->normalizePhone($student->phone);
-
-                    if ($phone === '' || isset($parentRowsByPhone[$phone])) {
-                        continue;
-                    }
-
-                    $parentRowsByPhone[$phone] = [
-                        'phone' => $phone,
-                        'name' => $student->father_name ?: 'Parent of Student ' . $student->id,
-                        'password' => Hash::make('icec321'), // or Hash::make('123456')
-                        'created_at' => now(),
-                        'updated_at' => now(),
-                    ];
-                }
-            });
-
-        foreach (array_chunk($parentRowsByPhone, 200) as $rows) {
-            ParentModel::insertOrIgnore(array_values($rows));
-            $this->line('Processed parent rows: ' . count($rows));
-        }
-
-        Student::query()
-            ->select(['id', 'phone', 'parent_id'])
-            ->orderBy('id')
-            ->chunkById(200, function ($students) use (&$totalStudentsAttached) {
+            ->chunkById(200, function ($students) use ($defaultPassword, &$totalParentsProcessed, &$totalStudentsAttached) {
+                $parentRowsByPhone = [];
                 $studentPhones = [];
 
                 foreach ($students as $student) {
@@ -100,12 +76,25 @@ class MigrateParents extends Command
                         continue;
                     }
 
+                    if (!isset($parentRowsByPhone[$phone])) {
+                        $parentRowsByPhone[$phone] = [
+                            'phone' => $phone,
+                            'name' => $student->father_name ?: 'Parent of Student ' . $student->id,
+                            'password' => $defaultPassword,
+                            'created_at' => now(),
+                            'updated_at' => now(),
+                        ];
+                    }
+
                     $studentPhones[$student->id] = $phone;
                 }
 
-                if (empty($studentPhones)) {
+                if (empty($parentRowsByPhone)) {
                     return;
                 }
+
+                ParentModel::insertOrIgnore(array_values($parentRowsByPhone));
+                $totalParentsProcessed += count($parentRowsByPhone);
 
                 $parentsByPhone = ParentModel::whereIn('phone', array_unique($studentPhones))
                     ->get()
@@ -124,10 +113,10 @@ class MigrateParents extends Command
                     $totalStudentsAttached++;
                 }
 
-                $this->line('Attached students so far: ' . $totalStudentsAttached);
+                $this->line('Processed chunk: ' . count($parentRowsByPhone) . ' parent phones, attached students so far: ' . $totalStudentsAttached);
             });
 
-        $this->info('Done. Processed ' . count($parentRowsByPhone) . " unique parent phones and attached {$totalStudentsAttached} students.");
+        $this->info("Done. Processed ~{$totalParentsProcessed} parent phone rows and attached {$totalStudentsAttached} students.");
 
         return Command::SUCCESS;
     }
